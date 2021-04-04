@@ -44,6 +44,7 @@ int main()
 		// Set up host-side memory for output
 		unsigned int* h_out_naive = new unsigned int[h_in_len];
 		unsigned int* h_out_blelloch = new unsigned int[h_in_len];
+		unsigned int* h_out_optim = new unsigned int[h_in_len];
 
 		// Set up device-side memory for input
 		unsigned int* d_in;
@@ -69,6 +70,17 @@ int main()
 		// Copy device output array to host output array
 		// And free device-side memory
 		checkCudaErrors(cudaMemcpy(h_out_blelloch, d_out_blelloch, sizeof(unsigned int) * h_in_len, cudaMemcpyDeviceToHost));
+
+		//Do optim GPU scan
+		start = std::clock();
+		sum_scan_optim(d_out_blelloch, d_in, h_in_len);
+		duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
+		std::cout << "Optim GPU time: " << duration << std::endl;
+
+		// Copy device output array to host output array
+		// And free device-side memory
+		checkCudaErrors(cudaMemcpy(h_out_optim, d_out_blelloch, sizeof(unsigned int) * h_in_len, cudaMemcpyDeviceToHost));
+
 		checkCudaErrors(cudaFree(d_out_blelloch));
 		checkCudaErrors(cudaFree(d_in));
 
@@ -77,8 +89,13 @@ int main()
 		int index_diff = 0;
 		for (int i = 0; i < h_in_len; ++i)
 		{
-			if (h_out_naive[i] != h_out_blelloch[i])
+			if (h_out_naive[i] != h_out_blelloch[i] )
 			{
+				match = false;
+				index_diff = i;
+				break;
+			}
+			if(i>0 && h_out_naive[i] != h_out_optim[i-1]){
 				match = false;
 				index_diff = i;
 				break;
@@ -113,7 +130,9 @@ int main()
 		delete[] h_in;
 		delete[] h_out_naive;
 		delete[] h_out_blelloch;
+		delete[] h_out_optim;
 
 		std::cout << std::endl;
+		
 	}
 }

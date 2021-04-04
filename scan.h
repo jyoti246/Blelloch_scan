@@ -17,4 +17,8 @@ void sum_scan_blelloch(unsigned int* const d_out,
 	const unsigned int* const d_in,
 	const size_t numElems);
 
+void sum_scan_optim(unsigned int* const d_out,
+	const unsigned int* const d_in,
+	const size_t numElems);
+
 #endif
